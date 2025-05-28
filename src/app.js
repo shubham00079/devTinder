@@ -17,6 +17,32 @@ app.post("/signup", async (req,res) => {
     }
 })
 
+app.get('/getUser', async (req,res) => {
+  const emailId = req.body.emailId
+  try {
+      const users = await User.find({ emailId });
+      if(users.length === 0){
+        res.status(400).send("User Not Found");
+      } else {
+        res.send(users);
+      }
+  } catch (error) {
+    res.status(400).send("Error getting data");
+  }
+})
+
+app.get('/feed', async (req, res) => {
+  try {
+    const users = await User.find({  });
+    if (users.length === 0) {
+      res.status(400).send('User Not Found');
+    } else {
+      res.send(users);
+    }
+  } catch (error) {
+    res.status(400).send('Error getting data');
+  }
+});
 
 connectDB()
   .then(() => {
