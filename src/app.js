@@ -1,23 +1,38 @@
 const express = require('express');
-
-// creating new instance of express application
+const connectDB = require('./config/database');
 const app = express();
+const User = require('./models/user');
 
+app.post("/signup", async (req,res) => {
+    const userObj = {
+        firstName : "Shubham",
+        lastName: "Kashyap",
+        emailId: "xxx@gmail.com",
+        password: "qwerty"
+    }
 
-app.use((req,res, next) => {
-    console.log('Middleware called');
-    next();
-});
+    // creating a new instance of the user model
+    const user = new User(userObj);
 
-app.get('/user', (req,res) => {
-    console.log('/user request called');
-    res.send("User");
-
+    try {
+        await user.save();
+        res.send('User added successfully');
+    } catch (error) {
+        res.status(400).send("Error saving the user", error.message);
+    }
 })
 
-app.listen(3000, () => {
-    console.log("Server is successfully listening on port fd dss 3000....")
-});
-// port for listensing incoming requests
+
+connectDB()
+  .then(() => {
+    console.log('Database connected...');
+    app.listen(3000, () => {
+      console.log('Server is successfully listening on port 3000....');
+    });
+  })
+  .catch((err) => {
+    console.log('Connection Not Made!!!');
+  });
+
 
 
