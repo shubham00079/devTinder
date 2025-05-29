@@ -4,6 +4,7 @@ const app = express();
 const User = require('./models/user');
 const { validateSignUpData } = require('./utils/validation');
 const bcrypt = require('bcrypt');
+const validator = require('validator');
 
 // works for all routes and methods
 app.use(express.json());
@@ -31,6 +32,31 @@ app.post('/signup', async (req, res) => {
     res
       .status(400)
       .json({ message: 'Error saving the user', error: error.message });
+  }
+});
+
+app.post('/login', async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    if (!validator.isEmail(emailId)) {
+      throw new Error('Wrong email format');
+    }
+    const user = await User.find({ emailId: emailId });
+    if (user.length === 0) {
+      throw new Error('User does not exist');
+    }
+    const hashPwd = user[0].password;
+
+    const isMatch = await bcrypt.compare(password, hashPwd);
+    if (!isMatch) {
+      throw new Error('Invalid Creds');
+    }
+    res.send('User Logged in Successfully');
+  } catch (error) {
+    res.status(400).json({
+      message: 'Failed',
+      error: error.message,
+    });
   }
 });
 
