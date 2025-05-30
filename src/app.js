@@ -7,6 +7,7 @@ const bcrypt = require('bcrypt');
 const validator = require('validator');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const { userAuth } = require('./middlewares/auth');
 
 // works for all routes and methods
 app.use(express.json());
@@ -69,22 +70,10 @@ app.post('/login', async (req, res) => {
   }
 });
 
-app.get('/profile', async (req, res) => {
+// added a userAuth middleware
+app.get('/profile', userAuth, async (req, res) => {
   try {
-    const cookies = req.cookies;
-
-    const { token } = cookies;
-    if (!token) {
-      throw new Error('Invalid credentials');
-    }
-    // validate my token
-    const decodedMessage = await jwt.verify(token, 'DEV@Tinder790');
-    const { _id } = decodedMessage;
-
-    const user = await User.findById(_id);
-    if (!user) {
-      throw new Error('USer does not exist');
-    }
+    const user = req.user;
     res.send(user);
   } catch (error) {
     res.status(400).json({ message: 'invalid', error: error.message });
