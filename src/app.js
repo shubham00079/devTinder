@@ -5,9 +5,12 @@ const User = require('./models/user');
 const { validateSignUpData } = require('./utils/validation');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
 
 // works for all routes and methods
 app.use(express.json());
+app.use(cookieParser());
 
 app.post('/signup', async (req, res) => {
   try {
@@ -41,22 +44,50 @@ app.post('/login', async (req, res) => {
     if (!validator.isEmail(emailId)) {
       throw new Error('Wrong email format');
     }
-    const user = await User.find({ emailId: emailId });
-    if (user.length === 0) {
+    const user = await User.findOne({ emailId: emailId });
+    if (!user) {
       throw new Error('User does not exist');
     }
-    const hashPwd = user[0].password;
 
-    const isMatch = await bcrypt.compare(password, hashPwd);
-    if (!isMatch) {
-      throw new Error('Invalid Creds');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      // Create a JWT token
+      const token = await jwt.sign({ _id: user._id }, 'DEV@Tinder790');
+
+      // Add the token to cookie & send the response back to user
+      res.cookie('token', token);
+      res.send('User Logged in Successfully');
+    } else {
+      throw new Error('Invalid Credentials...');
     }
-    res.send('User Logged in Successfully');
   } catch (error) {
     res.status(400).json({
       message: 'Failed',
       error: error.message,
     });
+  }
+});
+
+app.get('/profile', async (req, res) => {
+  try {
+    const cookies = req.cookies;
+
+    const { token } = cookies;
+    if (!token) {
+      throw new Error('Invalid credentials');
+    }
+    // validate my token
+    const decodedMessage = await jwt.verify(token, 'DEV@Tinder790');
+    const { _id } = decodedMessage;
+
+    const user = await User.findById(_id);
+    if (!user) {
+      throw new Error('USer does not exist');
+    }
+    res.send(user);
+  } catch (error) {
+    res.status(400).json({ message: 'invalid', error: error.message });
   }
 });
 
