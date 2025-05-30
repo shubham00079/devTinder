@@ -6,7 +6,6 @@ const { validateSignUpData } = require('./utils/validation');
 const bcrypt = require('bcrypt');
 const validator = require('validator');
 const cookieParser = require('cookie-parser');
-const jwt = require('jsonwebtoken');
 const { userAuth } = require('./middlewares/auth');
 
 // works for all routes and methods
@@ -50,11 +49,11 @@ app.post('/login', async (req, res) => {
       throw new Error('User does not exist');
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
       // Create a JWT token
-      const token = await jwt.sign({ _id: user._id }, 'DEV@Tinder790', {expiresIn: '1d'});
+      const token = await user.getJWT();
 
       // Add the token to cookie & send the response back to user
       res.cookie('token', token);
