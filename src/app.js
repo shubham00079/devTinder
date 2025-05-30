@@ -80,6 +80,13 @@ app.get('/profile', userAuth, async (req, res) => {
   }
 });
 
+// securing APIs using userAuth
+app.post('/sendConnectionRequest', userAuth, async (req, res) => {
+  console.log('Sending a connection request');
+
+  res.send('Connection request sent');
+});
+
 app.get('/getUser', async (req, res) => {
   const emailId = req.body.emailId;
   try {
